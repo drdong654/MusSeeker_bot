@@ -1,43 +1,31 @@
 # MusSeeker_bot
 
-## Запуск
+## Commands
 
 ```bash
-# Установка
-uv pip install .
-
-# Запуск
-python __main__.py
+uv pip install .        # install deps
+python __main__.py      # run bot
+docker compose up --build  # run via Docker
 ```
 
-Требуется `TOKEN=...` в `.env`.
+## Setup
 
-## Структура проекта
+- `TOKEN=...` in `.env` (already gitignored)
+- JS runtime required for yt-dlp: install `deno` or `nodejs`
+- `ffmpeg` required for mp3 conversion (in Dockerfile but not documented for local dev)
+- PO tokens generated automatically via `bgutil-ytdlp-pot-provider` — no cookies needed
 
-```
-musbot/
-├── __init__.py          # пакет
-├── __main__.py          # точка входа, polling
-├── config.py            # TOKEN, DOWNLOAD_DIR, конфиги
-├── keyboards.py         # reply + inline клавиатуры
-├── handlers/
-│   ├── __init__.py
-│   ├── commands.py      # /start, /menu, /help, /lol
-│   └── download.py      # скачивание по ссылке + callback
-└── services/
-    ├── __init__.py
-    └── downloader.py    # yt-dlp обёртка (UUID, обработка ошибок)
-```
+## Architecture
 
-## Архитектура
+- Flat package (`musbot`), no `src/` dir
+- Entrypoint: `__main__.py` — creates `Bot`, `Dispatcher`, registers 2 routers
+- Router registration order matters: `commands_router` (commands) → `download_router` (catch-all)
+- `handlers/download.py` catches all unmatched messages via bare `@router.message()`
+- yt-dlp runs synchronously in a thread via `asyncio.to_thread(download_music, url)` in `services/downloader.py`
+- Output goes to `downloads/` (gitignored); files cleaned up after sending
 
-- Каждый файл хендлеров создаёт свой `Router`, который регистрируется в `dp` через `include_router()`.
-- Клавиатуры вынесены в `keyboards.py` — единый источник правды.
-- Конфиг в `config.py` — токен, пути, настройки.
-- `services/downloader.py` — синхронная обёртка yt-dlp с UUID-файлами.
+## Gotchas
 
-## Зависимости
-
-- `aiogram>=3.0`
-- `python-dotenv>=1.0`
-- `yt-dlp>=2024.0`
+- No tests, no linter, no type checker configured
+- Uses `mweb` + `android` player clients with auto PO tokens — no cookies required
+- `ffmpeg` must be installed on the host (mp3 postprocessor)

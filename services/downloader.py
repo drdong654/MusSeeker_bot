@@ -19,6 +19,9 @@ def download_music(url: str) -> str | None:
         "format": "bestaudio/best",
         "outtmpl": os.path.join(DOWNLOAD_DIR, file_id + ".%(ext)s"),
         "quiet": True,
+        "keepvideo": False,
+        "extractor_args": {"youtube": {"player_client": ["mweb", "android"]}},
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3"}],
     }
 
     try:
@@ -27,8 +30,7 @@ def download_music(url: str) -> str | None:
     except Exception:
         return None
 
-    for fname in os.listdir(DOWNLOAD_DIR):
-        if fname.startswith(file_id):
-            return os.path.join(DOWNLOAD_DIR, fname)
-
+    mp3 = os.path.join(DOWNLOAD_DIR, file_id + ".mp3")
+    if os.path.exists(mp3):
+        return mp3
     return None

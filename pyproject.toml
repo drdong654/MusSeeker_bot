@@ -8,4 +8,5 @@ dependencies = [
     "aiogram>=3.0",
     "python-dotenv>=1.0",
     "yt-dlp>=2024.0,<2027",
+    "bgutil-ytdlp-pot-provider",
 ]
